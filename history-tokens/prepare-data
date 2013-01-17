@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+import argparse
+import gzip
+import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--workdir', required=True, help='Directory to work in when preparing data.')
+parser.add_argument('--input', required=True, help='Preprocess this data.')
+parser.add_argument('--tagfile', required=True, help='Use these tags for the input data.')
+parser.add_argument('--history', required=True, type=int, help='Use a history of this size.')
+parser.add_argument('--output', required=True, help='Write the processed data to this file.')
+
+def get_open_function(filename):
+    return gzip.open if filename.endswith('.gz') else open
+
+def tag_data(data_file, tag_file, delim='/'):
+    with get_open_function(data_file)(data_file) as data:
+        with get_open_function(tag_file)(tag_file) as tags:
+            for terminals, preterminals in zip(data, tags):
+                terminals = terminals.strip().split()
+                preterminals = preterminals.strip().split()
+                output = [delim.join(pair) for pair in zip(terminals, preterminals)]
+                yield output
+
+def add_history_tokens(tagged_data, history_size, delim='/', tokentype='IDENTIFIER'):
+    history = []
+    for line in tagged_data:
+        buf = []
+        for terminal, preterminal in (pair.split(delim) for pair in line):
+            if preterminal == tokentype:
+                history.append(terminal)
+                history = history[-history_size-1:]
+                if terminal in history[:-1]:
+                    i = list(reversed(history[:-1])).index(terminal)
+                    terminal = '<last-token-{0}>'.format(i+1)
+            buf.append('{0}{1}{2}'.format(terminal, delim, preterminal))
+        yield buf
+
+def strip_tags(tagged_data, delim='/'):
+    for line in tagged_data:
+        terminals = [pair.split(delim)[0] for pair in line]
+        yield terminals
+
+def main():
+    args = parser.parse_args()
+    if not os.path.exists(args.workdir):
+        os.makedirs(args.workdir)
+    os.chdir(args.workdir)
+    if args.history == 0:
+        with get_open_function(args.output)(args.output, 'w') as f:
+            for line in get_open_function(args.input)(args.input):
+                f.write(line + '\n')
+    else:
+        tagged_data = tag_data(args.input, args.tagfile)
+        history_data = add_history_tokens(tagged_data, args.history)
+        history_data = strip_tags(history_data)
+        with get_open_function(args.output)(args.output, 'w') as f:
+            for line in (' '.join(tokens) for tokens in history_data):
+                f.write(line + '\n')
+
+if __name__ == '__main__': main()

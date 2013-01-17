@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+
+import subprocess as sp
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--workdir', required=True, help='Test the model in this directory.')
+parser.add_argument('--text', required=True, help='Test model on these sentences.')
+parser.add_argument('--order', required=True, type=int, help='Use an n-gram of this order.')
+parser.add_argument('--vocab', required=True, help='Use this vocab.')
+parser.add_argument('--lm', required=True, help='Use this n-gram file.')
+parser.add_argument('--output', required=True, help='Print results to this file.')
+parser.add_argument('--infolevel', type=int, default=0, help='Print output information at this level.')
+
+def main():
+    args = parser.parse_args()
+    if not os.path.exists(args.workdir):
+        os.makedirs(args.workdir)
+    os.chdir(args.workdir)
+    cmd = 'ngram -ppl {args.text} -order {args.order} -vocab {args.vocab} -unk -lm {args.lm} -debug {args.infolevel} > {args.output}'.format(args=args)
+    sp.check_call(cmd, shell=True)
+
+if __name__ == '__main__': main()

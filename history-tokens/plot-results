@@ -1,0 +1,64 @@
+#!/usr/bin/env Rscript
+
+library(ggplot2)
+
+get.experiment.dirs <- function(exp.directory)
+{
+    list.files(exp.directory, full.names=T)
+}
+
+get.results.filepath <- function(d)
+{
+    dir.contents <- list.files(d, full.names=T)
+    results.file.pos <- grep("results.txt", dir.contents)
+    dir.contents[results.file.pos]
+}
+
+get.experiment.params <- function(filepath)
+{
+    experiment.dir <- strsplit(filepath, "/")[[1]][2]
+    params <- strsplit(experiment.dir, "-")[[1]][c(3, 5)]
+    as.integer(params)
+}
+
+get.perplexity <- function(filepath)
+{
+    lines <- readLines(filepath)
+    ppl <- strsplit(lines[2], " ")[[1]][6]
+    as.numeric(ppl)
+}
+
+main <- function(experiment.main, output.pdf)
+{
+    experiment.dirs <- get.experiment.dirs(experiment.main)
+    num.experiments <- length(experiment.dirs)
+
+    count <- 0
+    order <- vector(length=num.experiments)
+    history <- vector(length=num.experiments)
+    perplexity <- vector(length=num.experiments)
+    for (d in experiment.dirs)
+    {
+        count <- count + 1
+        results.file <- get.results.filepath(d)
+        params <- get.experiment.params(results.file)
+        ppl <- get.perplexity(results.file)
+        order[count] <- params[1]
+        history[count] <- params[2]
+        perplexity[count] <- ppl
+    }
+
+    order <- as.factor(order)
+    history <- as.factor(history)
+    score.data <- data.frame(order, history, perplexity)
+    pdf(output.pdf)
+    p <- ggplot(score.data, aes(x=order, y=perplexity)) +
+        geom_line(aes(colour=history, group=history))
+    print(p)
+    dev.off()
+}
+
+argv <- commandArgs(trailingOnly=T)
+experiment.main <- argv[1]
+output.pdf <- argv[2]
+main(experiment.main, output.pdf)
