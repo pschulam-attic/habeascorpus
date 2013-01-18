@@ -11,13 +11,14 @@ parser.add_argument('--text', required=True, help='Train the model on these sent
 parser.add_argument('--order', required=True, type=int, help='Train an n-gram of this order.')
 parser.add_argument('--vocab', required=True, help='Write the vocab to this file.')
 parser.add_argument('--lm', required=True, help='Write the language model to this file.')
+parser.add_argument('--discount', required=False, default='', help='Use this discounting method.')
 
 def main():
     args = parser.parse_args()
     if not os.path.exists(args.workdir):
         os.makedirs(args.workdir)
     os.chdir(args.workdir)
-    cmd = 'ngram-count -text {args.text} -order {args.order} -write-vocab {args.vocab} -unk -lm {args.lm}'.format(args=args)
+    cmd = 'ngram-count -text {args.text} -order {args.order} -write-vocab {args.vocab} -unk -lm {args.lm} {args.discount}'.format(args=args)
     sp.check_call(cmd, shell=True)
 
 if __name__ == '__main__': main()
