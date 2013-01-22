@@ -33,9 +33,11 @@ public class PPAVisitor extends ASTVisitor {
 	    else {
 		return;
 	    }
-	    printer.println("Node: " + node.toString());
 	    if (binding != null) {
-		printer.println("  " + PPABindingsUtil.getBindingText(binding));
+		printer.println(node.toString() + "|" + PPABindingsUtil.getBindingText(binding));
+	    }
+	    else {
+		printer.println(node.toString() + "|" + "ERROR: binding is null");
 	    }
 	    printer.flush();
 	}
