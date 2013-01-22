@@ -18,6 +18,7 @@ def main():
     if not os.path.exists(args.workdir):
         os.makedirs(args.workdir)
     os.chdir(args.workdir)
+    args.discount = '-' + args.discount if args.discount else ''
     cmd = 'ngram-count -text {args.text} -order {args.order} -write-vocab {args.vocab} -unk -lm {args.lm} {args.discount}'.format(args=args)
     sp.check_call(cmd, shell=True)
 

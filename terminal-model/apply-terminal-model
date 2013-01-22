@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+import argparse
+
+from utils import open_cmdline_file, close_cmdline_file
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--workdir', required=True, help='Work in this directory.')
+parser.add_argument('--text', required=True, help='Apply the model to these terminals.')
+parser.add_argument('--tags', required=True, help='Use these tags for the given terminals.')
+parser.add_argument('--model', required=True, help='Use this model.')
+parser.add_argument('--output', required=True, help='Write the results to this file.')
+
+def main():
+    args = parser.parse_args()
+    corpus = [l.strip().split() for l in open_cmdline_file(args.text)]
+    corpus = [w for l in corpus for w in l]
+    tags = [l.strip().split() for l in open_cmdline_file(args.tags)]
+    tags = [t for l in tags for t in l]
+
+    output_file = open_cmdline_file(args.output, 'w')
+    for terminal, tag in zip(corpus, tags):
+        output_file.write('{0}\n'.format(terminal))
+    close_cmdline_file(output_file)
+
+if __name__ == '__main__': main()

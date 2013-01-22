@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "usage: predict-with-ngram <likelihood file> <outfile>"
+    exit 1
+fi
+
+LL=$1
+OUT=$2
+
+zcat $1 |
+    perl -ne 'print unless /^$/ or /^\S/' | \
+    tee >(cut -d ' ' -f2 > words.tmp.txt) | \
+    perl -ne 's/^\s// and print'          | \
+    cut -d '=' -f 2                       | \
+    perl -pe 's/^\s//'                    | \
+    cut -d ' ' -f 2 > probs.tmp.txt
+
+paste -d ' ' words.tmp.txt probs.tmp.txt | gzip > $OUT
+rm words.tmp.txt probs.tmp.txt

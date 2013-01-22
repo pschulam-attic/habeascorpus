@@ -19,7 +19,12 @@ def main():
     if not os.path.exists(args.workdir):
         os.makedirs(args.workdir)
     os.chdir(args.workdir)
-    cmd = 'ngram -ppl {args.text} -order {args.order} -vocab {args.vocab} -unk -lm {args.lm} -debug {args.infolevel} > {args.output}'.format(args=args)
+    cmd = 'ngram -ppl {args.text} -order {args.order} -vocab {args.vocab} -unk -lm {args.lm} -debug {args.infolevel}'.format(args=args)
+    if args.output.endswith('.gz'):
+        cmd = cmd + ' | gzip > {args.output}'.format(args=args)
+    else:
+        cmd = cmd + ' > {args.output}'.format(args=args)
+
     sp.check_call(cmd, shell=True)
 
 if __name__ == '__main__': main()
